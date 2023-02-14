@@ -40,9 +40,22 @@ data = [
     },
 ]
 
+# TODO: Add docstrings to all functions
+# TODO: Every function should have a return type
+# TODO: Every function's parameter should have a type
+
 
 def todo():
     print('TODO')
+
+
+# TODO: Implement save and load data
+def save_data() -> None:
+    todo()
+
+
+def load_data() -> None:
+    todo()
 
 
 def is_id_unique(id: int) -> bool:
@@ -60,6 +73,8 @@ def print_invalid_choice_msg() -> None:
 
 
 def get_os_and_status() -> None:
+
+    print('\nWhat is the Operating System of the PC?')
     for os in OS:
         print(f'{OS.index(os) + 1}: {os}')
 
@@ -73,6 +88,7 @@ def get_os_and_status() -> None:
         except:
             print_exception_msg('OS')
 
+    print('\nWhat is the current status of the PC?')
     for idx, status in enumerate(STATUS):
         print(f'{idx + 1}: {status}')
 
@@ -98,9 +114,26 @@ def add_new_pc() -> None:
             print_exception_msg('ID')
 
     if not is_id_unique(id):
-        print('ID already exists')
-        # TODO: ask if user wants to update or remove the PC
-        return
+        print(f'\nID {id} already exists')
+        show_pc(id=id)
+        print('\nWhat do you want to do?')
+        while True:
+            try:
+                choice = int(input('\n1: Update\n2: Remove\n3: Cancel\n'))
+                if choice == 1:
+                    print(f'\nUpdating ID {id}...\n')
+                    update_pc(showTitle=False, id=id)
+                    return
+                elif choice == 2:
+                    remove_pc(showTitle=False, id=id)
+                    return
+                elif choice == 3:
+                    print('\nCancelling Add...\n')
+                    return
+                else:
+                    print_invalid_choice_msg()
+            except ValueError:
+                print_exception_msg('Choice')
 
     os_choice, status_choice = get_os_and_status()
 
@@ -113,18 +146,24 @@ def add_new_pc() -> None:
     print('\nPC added successfully\n')
 
 
-def update_pc() -> None:
-    print('\nUpdate PC\n')
+def update_pc(showTitle: bool = True, id: int = -1) -> None:
+
+    if showTitle:
+        print('\nUpdate PC\n')
+
     while True:
         try:
-            id = int(input('Enter ID to Update (0 to go back): '))
-            if id == 0:
-                print('\nCancelling Update...\n')
-                return
+            if id == -1:
+                id = int(input('Enter ID to Update (0 to go back): '))
+                if id == 0:
+                    print('\nCancelling Update...\n')
+                    return
+
             if id in [pc['id'] for pc in data]:
                 break
             else:
                 print('\nID not found\n')
+
         except ValueError:
             print_exception_msg('ID')
 
@@ -139,14 +178,19 @@ def update_pc() -> None:
     print(f'\nPC with ID {id} updated successfully\n')
 
 
-def remove_pc() -> None:
-    print('\nRemove PC\n')
+def remove_pc(showTitle: bool = True, id: int = -1) -> None:
+
+    if showTitle:
+        print('\nRemove PC\n')
+
     while True:
         try:
-            id = int(input('Enter ID to Remove (0 to go back): '))
-            if id == 0:
-                print('\nCancelling Remove...\n')
-                return
+            if id == -1:
+                id = int(input('Enter ID to Remove (0 to go back): '))
+                if id == 0:
+                    print('\nCancelling Remove...\n')
+                    return
+
             if id in [pc['id'] for pc in data]:
                 break
             else:
@@ -177,6 +221,7 @@ def search_pc():
     print('1: ID')
     print('2: Status')
     print('3: OS')
+    print('0: Main menu')
 
     method = int(input('Enter search method: '))
     if method == 1:
@@ -192,6 +237,7 @@ def search_pc():
                     print('\nID not found\n')
             except ValueError:
                 print_exception_msg('ID')
+
     elif method == 2:
         status = input(
             'Enter Status to Search (0 to go back): ').lower()
@@ -215,6 +261,9 @@ def search_pc():
             if d['os'].lower() == os:
                 res.append(d)
 
+    elif method == 0:
+        return
+
     else:
         print('Invalid choice')
 
@@ -225,7 +274,11 @@ def search_pc():
         print('No match found')
 
 
-def show_pc(pc_list=data) -> None:
+def show_pc(id=-1, pc_list=data) -> None:
+
+    if id != -1:
+        pc_list = [pc for pc in pc_list if pc['id'] == id]
+
     print('\n%-5s' % 'ID', '%-17s' % 'Status', '%-17s' % 'OS')
     print('-' * 50)
     for pc in pc_list:
@@ -268,7 +321,7 @@ def main_menu() -> None:
 def start_program():
     print_title()
     main_menu()
-    print('Quitting...')
+    print('Quitting...')  # TODO: Save before quitting
 
 
 if __name__ == '__main__':
