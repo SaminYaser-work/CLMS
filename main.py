@@ -1,3 +1,6 @@
+from bcolors import bcolors as b
+
+
 def print_title() -> None:
     title = '''
                                            .         .                         
@@ -279,6 +282,7 @@ def show_pc(id=-1, pc_list=data) -> None:
     if id != -1:
         pc_list = [pc for pc in pc_list if pc['id'] == id]
 
+    print(f"\nTotal {len(pc_list)} PC found in Database")
     print('\n%-5s' % 'ID', '%-17s' % 'Status', '%-17s' % 'OS')
     print('-' * 50)
     for pc in pc_list:
@@ -286,7 +290,9 @@ def show_pc(id=-1, pc_list=data) -> None:
 
 
 def main_menu() -> None:
-    menu = '''
+    menu = f'''
+    {b.HEADER}{b.UNDERLINE}Menu:{b.ENDC}{b.ENDC}
+
     1. Add new PC
     2. Update PC
     3. Remove PC
@@ -301,6 +307,7 @@ def main_menu() -> None:
         print()
         print(menu)
         choice = input('\nEnter your choice: ')
+        print('~' * 30 + '\n')
         if choice == '1':
             add_new_pc()
         elif choice == '2':
