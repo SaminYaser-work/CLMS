@@ -1,4 +1,6 @@
 class bcolors:
+    """Color codes for UNIX terminal
+    """
     HEADER = '\033[95m'
     BLUE = '\033[94m'
     CYAN = '\033[96m'
