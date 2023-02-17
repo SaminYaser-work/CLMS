@@ -3,6 +3,7 @@ from FileIO import FileIO
 
 STATUS = ['ACTIVE', 'INACTIVE', 'BROKEN', 'UNKNOWN']
 OS = ['WINDOWS', 'MAC', 'LINUX', 'UNKNOWN']
+CTRLS = ['Add New PC', 'Update PC', 'Remove PC', 'Show All PCs', 'Search PC']
 DB_FILE = 'db.json'
 io = FileIO(DB_FILE)
 b = bc()
@@ -63,8 +64,12 @@ def is_id_unique(id: int) -> bool:
     return True
 
 
+def is_valid_id(id: int) -> bool:
+    return id >= 0
+
+
 def print_exception_msg(msg: str) -> None:
-    print(f'\n{b.error("Error")} {msg} must be an integer\n')
+    print(f'\n{b.error("Error")} {msg} must be a positive integer\n')
 
 
 def print_invalid_choice_msg() -> None:
@@ -126,7 +131,10 @@ def add_new_pc() -> None:
     while True:
         try:
             id = int(input('Enter ID: '))
-            break
+            if is_valid_id(id):
+                break
+            else:
+                print_exception_msg('ID')
         except ValueError:
             print_exception_msg('ID')
 
@@ -221,12 +229,16 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
             if id in [pc['id'] for pc in data]:
                 break
             else:
-                print('\nID not found\n')
+                print(b.error(f'\nPC with ID {id} not found in DB\n'))
+                id = -1
         except ValueError:
             print_exception_msg('ID')
 
+    pc = [pc for pc in data if pc['id'] == id][0]
+    print_table([pc])
+
     confirm = input(
-        f'Are you sure you want to remove PC with ID {id}? (y/n): ')
+        b.warning(f'\nAre you sure you want to remove PC with ID {id}? (y/N): '))
     if confirm != 'y':
         print('\nCancelling Remove...\n')
         return
@@ -237,7 +249,7 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
             io.save(data)
             break
 
-    print(f'\nPC with ID {id} removed successfully from database\n')
+    print(b.success(f'\nPC with ID {id} removed successfully from DB\n'))
 
 
 def search_pc():
@@ -314,17 +326,12 @@ def show_all_pc() -> None:
 
 
 def main_menu() -> None:
-    menu = f'''
-    {b.title('Menu:')}
+    ctrls = ''.join([b.info(str(i + 1) + ': ') +
+                     ctrl + '\n' for i, ctrl in enumerate(CTRLS)])
 
-    1. Add new PC
-    2. Update PC
-    3. Remove PC
-    4. Show all PCs
-    5. Search PC
+    quitText = f"Type {b.info('quit')} to exit"
+    menu = b.title('Menu:') + '\n\n' + ctrls + '\n\n' + quitText
 
-    Type 'quit' to exit
-    '''
     print('-' * 80)
 
     while True:
