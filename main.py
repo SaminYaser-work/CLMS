@@ -27,34 +27,10 @@ def print_title() -> None:
     '''
     print(b.success(title))
 
-
-# Test data
-# data = [
-#     {
-#         "id": 1,
-#         "status": STATUS[0],
-#         "os": OS[0]
-#     },
-#     {
-#         "id": 2,
-#         "status": STATUS[1],
-#         "os": OS[1]
-#     },
-#     {
-#         "id": 3,
-#         "status": STATUS[2],
-#         "os": OS[2]
-#     },
-# ]
-
 # TODO: Add docstrings to all functions
 # TODO: Every function should have a return type
 # TODO: Every function's parameter should have a type
 # TODO: Use Match instead of if-else
-
-
-def todo():
-    print('TODO')
 
 
 def is_id_unique(id: int) -> bool:
@@ -65,15 +41,37 @@ def is_id_unique(id: int) -> bool:
 
 
 def is_valid_id(id: int) -> bool:
-    return id >= 0
+    return id > 0
+
+
+def get_pc_by_id(id: int) -> dict:
+    data = io.load()
+    for pc in data:
+        if pc['id'] == id:
+            return pc
+    return {}
 
 
 def print_exception_msg(msg: str) -> None:
-    print(f'\n{b.error("Error")} {msg} must be a positive integer\n')
+    print(f'\n{b.error("Error")} {msg} must be a non-zero positive integer\n')
 
 
 def print_invalid_choice_msg() -> None:
     print(f'\n{b.warning("Invalid choice")}\n')
+
+
+def take_input(msg: str, exp_msg: str) -> int:
+    while True:
+        try:
+            inp = int(input(msg))
+            if inp > 0:
+                return inp
+            else:
+                print_exception_msg(exp_msg)
+        except ValueError:
+            print_exception_msg(exp_msg)
+        except Exception as e:
+            print(b.error('Error:'), str(e))
 
 
 def print_table(data: list, showCountMsg='') -> None:
@@ -85,15 +83,26 @@ def print_table(data: list, showCountMsg='') -> None:
         print(showCountMsg)
 
     print(f'\n{b.HEADER}{b.BOLD}%-5s' % 'ID', '%-17s' %
-          'Status', '%-17s' % f'OS {b.ENDC}')
+          'OS', '%-17s' % f'Status {b.ENDC}')
     print(f'{b.CYAN}' + '-' * 33 + f'{b.ENDC}')
     for pc in data:
-        print('%-5i' % pc['id'], '%-17s' % pc['status'], '%-17s' % pc['os'])
+        status = ''
+        match pc['status'].lower():
+            case 'active':
+                status = b.success(pc['status'])
+            case 'inactive':
+                status = b.warning(pc['status'])
+            case 'broken':
+                status = b.error(pc['status'])
+            case _:
+                status = pc['status']
+
+        print('%-5i' % pc['id'], '%-17s' % pc['os'], '%-17s' % status)
 
 
 def get_os_and_status(id: int) -> None:
 
-    print(b.cyan(text=f'\nWhat is the Operating System of the PC {id}?'))
+    print(b.warning(text=f'\nWhat is the Operating System of the PC {id}?'))
 
     for os in OS:
         print(f'{OS.index(os) + 1}: {os}')
@@ -126,17 +135,8 @@ def get_os_and_status(id: int) -> None:
 
 
 def add_new_pc() -> None:
-    data = io.load()
 
-    while True:
-        try:
-            id = int(input('Enter ID: '))
-            if is_valid_id(id):
-                break
-            else:
-                print_exception_msg('ID')
-        except ValueError:
-            print_exception_msg('ID')
+    id = take_input('Enter ID: ', 'ID')
 
     if not is_id_unique(id):
         print(b.info(f'\nID {id} already exists'))
@@ -160,7 +160,7 @@ def add_new_pc() -> None:
             except ValueError:
                 print_exception_msg('Choice')
 
-    os_choice, status_choice = get_os_and_status()
+    os_choice, status_choice = get_os_and_status(id)
 
     data = io.load()
     data.append({
@@ -170,7 +170,7 @@ def add_new_pc() -> None:
     })
     io.save(data)
 
-    print(f'\n{b.GREEN}PC {id} added to DB{b.ENDC}')
+    print(b.success(f'\nPC {id} added to DB'))
 
 
 def update_pc(showTitle: bool = True, id: int = -1) -> None:
@@ -178,33 +178,26 @@ def update_pc(showTitle: bool = True, id: int = -1) -> None:
     if showTitle:
         print(b.subtitle('\nUpdate PC\n'))
 
-    data = io.load()
+    if id == -1:
+        id = take_input('Enter ID to Update (0 to go back): ', 'ID')
+        if id == 0:
+            print('\nCancelling Update...\n')
+            return
 
-    while True:
-        try:
-            if id == -1:
-                id = int(input('Enter ID to Update (0 to go back): '))
-                if id == 0:
-                    print('\nCancelling Update...\n')
-                    return
+    pc = get_pc_by_id(id)
 
-            if id in [pc['id'] for pc in data]:
-                break
-            else:
-                print('\n' + b.error(f'ID {id} not found in DB'))
-                return
-
-        except ValueError:
-            print_exception_msg('ID')
+    if not pc:
+        print('\n' + b.error(f'ID {id} not found in DB'))
+        return
 
     os_choice, status_choice = get_os_and_status(id)
 
+    data = io.load()
     for pc in data:
         if pc['id'] == id:
             pc['status'] = STATUS[status_choice]
             pc['os'] = OS[os_choice]
             break
-
     io.save(data)
 
     print(b.success(f'\nPC {id} updated successfully'))
@@ -217,21 +210,15 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
 
     data = io.load()
 
-    while True:
-        try:
-            if id == -1:
-                id = int(input('Enter ID to Remove (0 to go back): '))
-                if id == 0:
-                    print('\nCancelling Remove...\n')
-                    return
+    if id == -1:
+        id = take_input('Enter ID to Remove (0 to go back): ', 'ID')
+        if id == 0:
+            print('\nCancelling Remove...\n')
+            return
 
-            if id in [pc['id'] for pc in data]:
-                break
-            else:
-                print(b.error(f'\nPC with ID {id} not found in DB\n'))
-                id = -1
-        except ValueError:
-            print_exception_msg('ID')
+    if id not in [pc['id'] for pc in data]:
+        print(b.error(f'\nPC with ID {id} not found in DB\n'))
+        id = -1
 
     pc = [pc for pc in data if pc['id'] == id][0]
     print_table([pc])
@@ -266,19 +253,19 @@ def search_pc() -> None:
 
     method = int(input('Enter search method: '))
     if method == 1:
-        while True:
-            try:
-                id = int(input('Enter ID to Search (0 to go back): '))
-                if id == 0:
-                    print('\nCancelling Search...\n')
-                    return
-                if id in [pc['id'] for pc in io.load()]:
-                    text = f'\nPC with ID {id} found in DB'
-                    break
-                else:
-                    print('\nID not found\n')
-            except ValueError:
-                print_exception_msg('ID')
+        id = take_input('Enter ID to Search (0 to go back): ', 'ID')
+        if id == 0:
+            print('\nCancelling Search...\n')
+            return
+
+        pc = get_pc_by_id(id)
+
+        if pc:
+            res.append(pc)
+            text = f'\nPC with ID {id} found in DB'
+        else:
+            print(b.error(f'\nPC with ID {id} not found in DB'))
+            return
 
     elif method == 2:
         status = input(
@@ -289,7 +276,6 @@ def search_pc() -> None:
             return
 
         for d in io.load():
-            print(d)
             if d['status'].lower() == status:
                 res.append(d)
         text = b.success(
@@ -304,7 +290,8 @@ def search_pc() -> None:
         for d in io.load():
             if d['os'].lower() == os:
                 res.append(d)
-        text = b.success(f'\nTotal of {len(res)} PC(s) found with OS {os}')
+        text = b.success(
+            f'\nTotal of {len(res)} PC(s) found with OS {os}')
 
     elif method == 0:
         return
@@ -315,7 +302,7 @@ def search_pc() -> None:
     if res:
         print_table(data=res, showCountMsg=text)
     else:
-        print(b.error('No match found in DB'))
+        print(b.error('\nNo match found in DB'))
 
 
 def show_all_pc() -> None:
@@ -329,7 +316,7 @@ def main_menu() -> None:
                      ctrl + '\n' for i, ctrl in enumerate(CTRLS)])
 
     quitText = f"Type {b.info('quit')} to exit"
-    menu = b.title('Menu:') + '\n' + ctrls + '\n\n' + quitText
+    menu = b.title('Menu:') + '\n' + ctrls + '\n' + quitText
 
     print('-' * 80)
 
