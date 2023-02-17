@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "status": "ACTIVE",
+        "os": "WINDOWS"
+    },
+    {
+        "id": 2,
+        "status": "INACTIVE",
+        "os": "MAC"
+    },
+    {
+        "id": 3,
+        "status": "BROKEN",
+        "os": "LINUX"
+    },
+    {
+        "id": 4,
+        "status": "UNKNOWN",
+        "os": "MAC"
+    }
+]

@@ -1,4 +1,11 @@
-from bcolors import bcolors as b
+from bcolors import bcolors as bc
+from FileIO import FileIO
+
+STATUS = ['ACTIVE', 'INACTIVE', 'BROKEN', 'UNKNOWN']
+OS = ['WINDOWS', 'MAC', 'LINUX', 'UNKNOWN']
+DB_FILE = 'db.json'
+io = FileIO(DB_FILE)
+b = bc()
 
 
 def print_title() -> None:
@@ -17,67 +24,72 @@ def print_title() -> None:
 
                                                      Yaser, Samin - 19-39442-1
     '''
-    print(title)
-
-
-STATUS = ['ACTIVE', 'INACTIVE', 'BROKEN', 'UNKNOWN']
-OS = ['WINDOWS', 'MAC', 'LINUX', 'UNKNOWN']
+    print(b.success(title))
 
 
 # Test data
-data = [
-    {
-        "id": 1,
-        "status": STATUS[0],
-        "os": OS[0]
-    },
-    {
-        "id": 2,
-        "status": STATUS[1],
-        "os": OS[1]
-    },
-    {
-        "id": 3,
-        "status": STATUS[2],
-        "os": OS[2]
-    },
-]
+# data = [
+#     {
+#         "id": 1,
+#         "status": STATUS[0],
+#         "os": OS[0]
+#     },
+#     {
+#         "id": 2,
+#         "status": STATUS[1],
+#         "os": OS[1]
+#     },
+#     {
+#         "id": 3,
+#         "status": STATUS[2],
+#         "os": OS[2]
+#     },
+# ]
 
 # TODO: Add docstrings to all functions
 # TODO: Every function should have a return type
 # TODO: Every function's parameter should have a type
+# TODO: Use Match instead of if-else
 
 
 def todo():
     print('TODO')
 
 
-# TODO: Implement save and load data
-def save_data() -> None:
-    todo()
-
-
-def load_data() -> None:
-    todo()
-
-
 def is_id_unique(id: int) -> bool:
+    data = io.load()
     if id in [pc['id'] for pc in data]:
         return False
     return True
 
 
 def print_exception_msg(msg: str) -> None:
-    print(f'\nError: {msg} must be an integer\n')
+    print(f'\n{b.error("Error")} {msg} must be an integer\n')
 
 
 def print_invalid_choice_msg() -> None:
-    print('\nInvalid choice\n')
+    print(f'\n{b.warning("Invalid choice")}\n')
 
 
-def get_os_and_status() -> None:
+def print_table(data: list, showCountMsg='') -> None:
 
-    print('\nWhat is the Operating System of the PC?')
+    if not showCountMsg:
+        print(
+            f"\nTotal {b.GREEN}{b.BOLD}{len(data)}{b.ENDC} PC(s) found in DB")
+    else:
+        print(showCountMsg)
+
+    print(f'\n{b.HEADER}{b.BOLD}%-5s' % 'ID', '%-17s' %
+          'Status', '%-17s' % f'OS {b.ENDC}')
+    print(f'{b.CYAN}' + '-' * 33 + f'{b.ENDC}')
+    for pc in data:
+        print('%-5i' % pc['id'], '%-17s' % pc['status'], '%-17s' % pc['os'])
+
+
+def get_os_and_status(id: int) -> None:
+
+    print(b.cyan(text=f'\nWhat is the Operating System of the PC {id}?'))
+
     for os in OS:
         print(f'{OS.index(os) + 1}: {os}')
 
@@ -91,7 +103,7 @@ def get_os_and_status() -> None:
         except:
             print_exception_msg('OS')
 
-    print('\nWhat is the current status of the PC?')
+    print(f'\nWhat is the current status of the {b.underline(f"PC {id}")}?')
     for idx, status in enumerate(STATUS):
         print(f'{idx + 1}: {status}')
 
@@ -109,6 +121,8 @@ def get_os_and_status() -> None:
 
 
 def add_new_pc() -> None:
+    data = io.load()
+
     while True:
         try:
             id = int(input('Enter ID: '))
@@ -117,42 +131,47 @@ def add_new_pc() -> None:
             print_exception_msg('ID')
 
     if not is_id_unique(id):
-        print(f'\nID {id} already exists')
-        show_pc(id=id)
-        print('\nWhat do you want to do?')
+        print(b.info(f'\nID {id} already exists'))
+        print_table([pc for pc in data if pc['id'] == id])
         while True:
             try:
                 choice = int(input('\n1: Update\n2: Remove\n3: Cancel\n'))
-                if choice == 1:
-                    print(f'\nUpdating ID {id}...\n')
-                    update_pc(showTitle=False, id=id)
-                    return
-                elif choice == 2:
-                    remove_pc(showTitle=False, id=id)
-                    return
-                elif choice == 3:
-                    print('\nCancelling Add...\n')
-                    return
-                else:
-                    print_invalid_choice_msg()
+                match choice:
+                    case 1:
+                        print(f'\nUpdating ID {id}...\n')
+                        update_pc(showTitle=False, id=id)
+                        return
+                    case 2:
+                        remove_pc(showTitle=False, id=id)
+                        return
+                    case 3:
+                        print('\nCancelling Add...\n')
+                        return
+                    case _:
+                        print_invalid_choice_msg()
             except ValueError:
                 print_exception_msg('Choice')
 
     os_choice, status_choice = get_os_and_status()
 
+    data = io.load()
     data.append({
         "id": id,
         "status": STATUS[status_choice],
         "os": OS[os_choice]
     })
+    io.save(data)
 
-    print('\nPC added successfully\n')
+    print(f'\n{b.GREEN}PC {id} added to DB{b.ENDC}')
 
 
 def update_pc(showTitle: bool = True, id: int = -1) -> None:
 
+    # DONE: Make this a function
     if showTitle:
-        print('\nUpdate PC\n')
+        print(b.subtitle('\nUpdate PC\n'))
+
+    data = io.load()
 
     while True:
         try:
@@ -165,12 +184,13 @@ def update_pc(showTitle: bool = True, id: int = -1) -> None:
             if id in [pc['id'] for pc in data]:
                 break
             else:
-                print('\nID not found\n')
+                print('\n' + b.error(f'ID {id} not found in DB'))
+                return
 
         except ValueError:
             print_exception_msg('ID')
 
-    os_choice, status_choice = get_os_and_status()
+    os_choice, status_choice = get_os_and_status(id)
 
     for pc in data:
         if pc['id'] == id:
@@ -178,13 +198,17 @@ def update_pc(showTitle: bool = True, id: int = -1) -> None:
             pc['os'] = OS[os_choice]
             break
 
-    print(f'\nPC with ID {id} updated successfully\n')
+    io.save(data)
+
+    print(b.success(f'\nPC {id} updated successfully'))
 
 
 def remove_pc(showTitle: bool = True, id: int = -1) -> None:
 
     if showTitle:
-        print('\nRemove PC\n')
+        print(b.subtitle('\nRemove PC\n'))
+
+    data = io.load()
 
     while True:
         try:
@@ -210,21 +234,24 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
     for pc in data:
         if pc['id'] == id:
             data.remove(pc)
+            io.save(data)
             break
 
     print(f'\nPC with ID {id} removed successfully from database\n')
 
 
 def search_pc():
-    print('\nSearch PC\n')
+    print(b.subtitle('\nSearch PC\n'))
 
     res = []
 
-    print('Search by: ')
+    print(b.underline('Search by:\n'))
     print('1: ID')
     print('2: Status')
-    print('3: OS')
+    print('3: OS\n')
     print('0: Main menu')
+
+    text = ''
 
     method = int(input('Enter search method: '))
     if method == 1:
@@ -234,7 +261,8 @@ def search_pc():
                 if id == 0:
                     print('\nCancelling Search...\n')
                     return
-                if id in [pc['id'] for pc in data]:
+                if id in [pc['id'] for pc in io.load()]:
+                    text = f'\nPC with ID {id} found in DB'
                     break
                 else:
                     print('\nID not found\n')
@@ -249,10 +277,12 @@ def search_pc():
             print('\nCancelling Search...\n')
             return
 
-        for d in data:
+        for d in io.load():
             print(d)
             if d['status'].lower() == status:
                 res.append(d)
+        text = b.success(
+            f'\nTotal of {len(res)} PC(s) found with status {status}')
 
     elif method == 3:
         os = input('Enter OS to Search (0 to go back): ').lower()
@@ -260,42 +290,32 @@ def search_pc():
             print('\nCancelling Search...\n')
             return
 
-        for d in data:
+        for d in io.load():
             if d['os'].lower() == os:
                 res.append(d)
+        text = b.success(f'\nTotal of {len(res)} PC(s) found with OS {os}')
 
     elif method == 0:
         return
 
     else:
-        print('Invalid choice')
+        print_invalid_choice_msg()
 
     if res:
-        print(f'\n{len(res)} PC(s) found\n')
-        show_pc(res)
+        print_table(data=res, showCountMsg=text)
     else:
-        print('No match found')
+        print(b.error('No match found in DB'))
 
 
-def show_pc(id=-1, pc_list=data) -> None:
-
-    if id != -1:
-        pc_list = [pc for pc in pc_list if pc['id'] == id]
-
-    color = b.GREEN if len(pc_list) > 0 else b.FAIL
-
-    print(
-        f"\nTotal {color}{b.BOLD}{len(pc_list)}{b.ENDC} PC found in Database")
-    print(f'\n{b.HEADER}{b.BOLD}%-5s' % 'ID', '%-17s' %
-          'Status', '%-17s' % f'OS {b.ENDC}')
-    print(f'{b.CYAN}' + '-' * 50 + f'{b.ENDC}')
-    for pc in pc_list:
-        print('%-5i' % pc['id'], '%-17s' % pc['status'], '%-17s' % pc['os'])
+def show_all_pc() -> None:
+    data = io.load()
+    text = f"\nTotal {b.GREEN}{b.BOLD}{len(data)}{b.ENDC} PC(s) found in DB"
+    print_table(data=data, showCountMsg=text)
 
 
 def main_menu() -> None:
     menu = f'''
-    {b.HEADER}{b.UNDERLINE}Menu:{b.ENDC}{b.ENDC}
+    {b.title('Menu:')}
 
     1. Add new PC
     2. Update PC
@@ -312,21 +332,22 @@ def main_menu() -> None:
         print(menu)
         choice = input('\nEnter your choice: ')
         print('~' * 30 + '\n')
-        if choice == '1':
-            add_new_pc()
-        elif choice == '2':
-            update_pc()
-        elif choice == '3':
-            remove_pc()
-        elif choice == '4':
-            # TODO: Show the number of PCs
-            show_pc()
-        elif choice == '5':
-            search_pc()
-        elif choice == 'quit':
-            break
-        else:
-            print('Invalid choice')
+
+        match choice:
+            case '1':
+                add_new_pc()
+            case '2':
+                update_pc()
+            case '3':
+                remove_pc()
+            case '4':
+                show_all_pc()
+            case '5':
+                search_pc()
+            case 'quit':
+                break
+            case _:
+                print_invalid_choice_msg()
 
 
 def start_program():
