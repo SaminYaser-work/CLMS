@@ -175,7 +175,6 @@ def add_new_pc() -> None:
 
 def update_pc(showTitle: bool = True, id: int = -1) -> None:
 
-    # DONE: Make this a function
     if showTitle:
         print(b.subtitle('\nUpdate PC\n'))
 
@@ -252,7 +251,7 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
     print(b.success(f'\nPC with ID {id} removed successfully from DB\n'))
 
 
-def search_pc():
+def search_pc() -> None:
     print(b.subtitle('\nSearch PC\n'))
 
     res = []
@@ -330,7 +329,7 @@ def main_menu() -> None:
                      ctrl + '\n' for i, ctrl in enumerate(CTRLS)])
 
     quitText = f"Type {b.info('quit')} to exit"
-    menu = b.title('Menu:') + '\n\n' + ctrls + '\n\n' + quitText
+    menu = b.title('Menu:') + '\n' + ctrls + '\n\n' + quitText
 
     print('-' * 80)
 
@@ -357,7 +356,7 @@ def main_menu() -> None:
                 print_invalid_choice_msg()
 
 
-def start_program():
+def start_program() -> None:
     print_title()
     main_menu()
     print('Quitting...')  # TODO: Save before quitting
