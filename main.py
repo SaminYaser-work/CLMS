@@ -289,7 +289,7 @@ def search_pc() -> None:
     search_key = take_input(
         f'Enter {category.upper()} to Search: ', exp_msg=category.upper(), isStr=True)
 
-    res = get_pcs(value=search_key, key=category.lower())
+    res = get_pcs(value=search_key.upper(), key=category.lower())
 
     if res:
         text = b.success(
@@ -338,7 +338,7 @@ def main_menu() -> None:
 def start_program() -> None:
     print_title()
     main_menu()
-    print('Quitting CLMS...')  # TODO: Save before quitting
+    print(b.subtitle('\nQuitting CLMS...'))
 
 
 if __name__ == '__main__':
