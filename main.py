@@ -25,11 +25,12 @@ def print_title() -> None:
 `8 8888       .8' 8 8888           ,8'     `8.`'     `8.`8888.  8b   `8.`8888.
    8888     ,88'  8 8888          ,8'       `8        `8.`8888. `8b.  ;8.`8888
     `8888888P'    8 888888888888 ,8'         `         `8.`8888. `Y8888P ,88P'
-                                                Computer Lab Management System
-                                                     Yaser, Samin | 19-39442-1
-    '''
+
+                                                Computer Lab Management System'''
     print(b.success(title))
-    print('-' * 80)
+    print(b.warning(b.bold('                                                     Yaser, Samin | 19-39442-1'
+                           )))
+    print(b.success('-' * 78))
 
 # TODO: Add docstrings to all functions
 # TODO: Every function should have a return type
