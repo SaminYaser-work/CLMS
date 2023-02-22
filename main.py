@@ -26,7 +26,7 @@ def print_title() -> None:
    8888     ,88'  8 8888          ,8'       `8        `8.`8888. `8b.  ;8.`8888
     `8888888P'    8 888888888888 ,8'         `         `8.`8888. `Y8888P ,88P'
                                                 Computer Lab Management System
-                                                     Yaser, Samin - 19-39442-1
+                                                     Yaser, Samin | 19-39442-1
     '''
     print(b.success(title))
     print('-' * 80)
