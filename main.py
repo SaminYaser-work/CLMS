@@ -1,31 +1,35 @@
 from bcolors import bcolors as bc
 from FileIO import FileIO
+import sys
 
 STATUS = ['ACTIVE', 'INACTIVE', 'BROKEN', 'UNKNOWN']
 OS = ['WINDOWS', 'MAC', 'LINUX', 'UNKNOWN']
 CTRLS = ['Add New PC', 'Update PC', 'Remove PC', 'Show All PCs', 'Search PC']
+DUP_ID_OPTIONS = ['Update', 'Remove', 'Cancel']
 DB_FILE = 'db.json'
+SEARCH_OPTIONS = ['ID', 'OS', 'Status', 'Go Back to Main Menu']
 io = FileIO(DB_FILE)
 b = bc()
 
 
 def print_title() -> None:
     title = '''
-                                           .         .                         
-    ,o888888o.    8 8888                  ,8.       ,8.            d888888o.   
-   8888     `88.  8 8888                 ,888.     ,888.         .`8888:' `88. 
-,8 8888       `8. 8 8888                .`8888.   .`8888.        8.`8888.   Y8 
-88 8888           8 8888               ,8.`8888. ,8.`8888.       `8.`8888.     
-88 8888           8 8888              ,8'8.`8888,8^8.`8888.       `8.`8888.    
-88 8888           8 8888             ,8' `8.`8888' `8.`8888.       `8.`8888.   
-88 8888           8 8888            ,8'   `8.`88'   `8.`8888.       `8.`8888.  
-`8 8888       .8' 8 8888           ,8'     `8.`'     `8.`8888.  8b   `8.`8888. 
-   8888     ,88'  8 8888          ,8'       `8        `8.`8888. `8b.  ;8.`8888 
-    `8888888P'    8 888888888888 ,8'         `         `8.`8888. `Y8888P ,88P' 
-
+                                           .         .
+    ,o888888o.    8 8888                  ,8.       ,8.            d888888o.
+   8888     `88.  8 8888                 ,888.     ,888.         .`8888:' `88.
+,8 8888       `8. 8 8888                .`8888.   .`8888.        8.`8888.   Y8
+88 8888           8 8888               ,8.`8888. ,8.`8888.       `8.`8888.
+88 8888           8 8888              ,8'8.`8888,8^8.`8888.       `8.`8888.
+88 8888           8 8888             ,8' `8.`8888' `8.`8888.       `8.`8888.
+88 8888           8 8888            ,8'   `8.`88'   `8.`8888.       `8.`8888.
+`8 8888       .8' 8 8888           ,8'     `8.`'     `8.`8888.  8b   `8.`8888.
+   8888     ,88'  8 8888          ,8'       `8        `8.`8888. `8b.  ;8.`8888
+    `8888888P'    8 888888888888 ,8'         `         `8.`8888. `Y8888P ,88P'
+                                                Computer Lab Management System
                                                      Yaser, Samin - 19-39442-1
     '''
     print(b.success(title))
+    print('-' * 80)
 
 # TODO: Add docstrings to all functions
 # TODO: Every function should have a return type
@@ -38,6 +42,14 @@ def is_id_unique(id: int) -> bool:
     if id in [pc['id'] for pc in data]:
         return False
     return True
+
+
+def get_pcs(value: str | int, key='id' or 'status' or 'os') -> list:
+    res = []
+    for pc in io.load():
+        if str(pc[key]) == str(value):
+            res.append(pc)
+    return res
 
 
 def is_valid_id(id: int) -> bool:
@@ -60,27 +72,32 @@ def print_invalid_choice_msg() -> None:
     print(f'\n{b.warning("Invalid choice")}\n')
 
 
-def take_input(msg: str, exp_msg: str) -> int:
+def take_input(msg: str, exp_msg: str, max_value=sys.maxsize, min_value=1,  isStr=False) -> int | str:
     while True:
+        inp = input(msg).strip().lower()
+        if isStr or inp == 'quit':
+            return inp
         try:
-            inp = int(input(msg))
-            if inp > 0:
-                return inp
-            else:
-                print_exception_msg(exp_msg)
+            inp = int(inp)
         except ValueError:
             print_exception_msg(exp_msg)
         except Exception as e:
             print(b.error('Error:'), str(e))
+        else:
+            if inp >= min_value and inp <= max_value:
+                return inp
+            else:
+                print_invalid_choice_msg()
 
 
-def print_table(data: list, showCountMsg='') -> None:
+def print_table(data: list, countMsg='', showMsg=True) -> None:
 
-    if not showCountMsg:
-        print(
-            f"\nTotal {b.GREEN}{b.BOLD}{len(data)}{b.ENDC} PC(s) found in DB")
-    else:
-        print(showCountMsg)
+    if showMsg:
+        if not countMsg:
+            print(
+                f"\nTotal {b.GREEN}{b.BOLD}{len(data)}{b.ENDC} PC(s) found in DB")
+        else:
+            print(countMsg)
 
     print(f'\n{b.HEADER}{b.BOLD}%-5s' % 'ID', '%-17s' %
           'OS', '%-17s' % f'Status {b.ENDC}')
@@ -94,56 +111,61 @@ def print_table(data: list, showCountMsg='') -> None:
                 status = b.warning(pc['status'])
             case 'broken':
                 status = b.error(pc['status'])
+            case 'unknown':
+                status = b.info(pc['status'])
             case _:
                 status = pc['status']
 
         print('%-5i' % pc['id'], '%-17s' % pc['os'], '%-17s' % status)
 
 
-def get_os_and_status(id: int) -> None:
+def print_menu(menu_header: str, options: list, menu_trailer='', style=b.warning) -> None:
 
-    print(b.warning(text=f'\nWhat is the Operating System of the PC {id}?'))
+    print(style(f'\n{menu_header}'))
 
-    for os in OS:
-        print(f'{OS.index(os) + 1}: {os}')
+    print()
 
-    while True:
-        try:
-            os_choice = int(input('Choose OS: ')) - 1
-            if os_choice >= 0 and os_choice < len(OS):
-                break
-            else:
-                print_invalid_choice_msg()
-        except:
-            print_exception_msg('OS')
+    for idx, option in enumerate(options):
+        print(b.info(f'{idx + 1}:'), f'{option}')
 
-    print(f'\nWhat is the current status of the {b.underline(f"PC {id}")}?')
-    for idx, status in enumerate(STATUS):
-        print(f'{idx + 1}: {status}')
+    print()
 
-    while True:
-        try:
-            status_choice = int(input('Choose status: ')) - 1
-            if status_choice >= 0 and status_choice < len(STATUS):
-                break
-            else:
-                print_invalid_choice_msg()
-        except:
-            print_exception_msg('Status')
+    if menu_trailer:
+        print(menu_trailer)
 
-    return os_choice, status_choice
+
+def get_os_and_status(id: int):
+    print_menu(
+        f'What is the Operating System of the PC {id}?', OS
+    )
+
+    os_choice = take_input('Choose OS: ', 'OS', max_value=len(OS)) - 1
+
+    print_menu(
+        f'What is the current status of the PC {id}?', STATUS
+    )
+
+    status_choice = take_input(
+        'Choose status: ', 'Status', max_value=len(STATUS)) - 1
+
+    return OS[os_choice], STATUS[status_choice]
 
 
 def add_new_pc() -> None:
+    print(b.subtitle('\nADD PC\n'))
 
     id = take_input('Enter ID: ', 'ID')
 
-    if not is_id_unique(id):
-        print(b.info(f'\nID {id} already exists'))
-        print_table([pc for pc in data if pc['id'] == id])
+    pc = get_pcs(key='id', value=id)
+
+    if pc:
+        print(b.info(f'\nID {id} already exists in DB'))
+        print_table(pc, showMsg=False)
         while True:
             try:
-                choice = int(input('\n1: Update\n2: Remove\n3: Cancel\n'))
+                print_menu('What do you want to do?', DUP_ID_OPTIONS)
+                choice = take_input('Choose: ', 'Choice',
+                                    max_value=len(DUP_ID_OPTIONS))
                 match choice:
                     case 1:
                         print(f'\nUpdating ID {id}...\n')
@@ -160,13 +182,13 @@ def add_new_pc() -> None:
             except ValueError:
                 print_exception_msg('Choice')
 
-    os_choice, status_choice = get_os_and_status(id)
+    os, status = get_os_and_status(id)
 
     data = io.load()
     data.append({
         "id": id,
-        "status": STATUS[status_choice],
-        "os": OS[os_choice]
+        "status": status,
+        "os": os
     })
     io.save(data)
 
@@ -179,24 +201,28 @@ def update_pc(showTitle: bool = True, id: int = -1) -> None:
         print(b.subtitle('\nUpdate PC\n'))
 
     if id == -1:
-        id = take_input('Enter ID to Update (0 to go back): ', 'ID')
+        id = take_input('Enter ID to Update (0 to go back): ',
+                        'ID', min_value=0)
         if id == 0:
             print('\nCancelling Update...\n')
             return
 
-    pc = get_pc_by_id(id)
+    pc = get_pcs(key='id', value=id)
 
     if not pc:
         print('\n' + b.error(f'ID {id} not found in DB'))
         return
 
-    os_choice, status_choice = get_os_and_status(id)
+    os, status = get_os_and_status(id)
+
+    print(os, status)
 
     data = io.load()
+    # TODO: Create update function
     for pc in data:
         if pc['id'] == id:
-            pc['status'] = STATUS[status_choice]
-            pc['os'] = OS[os_choice]
+            pc['status'] = status
+            pc['os'] = os
             break
     io.save(data)
 
@@ -211,17 +237,19 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
     data = io.load()
 
     if id == -1:
-        id = take_input('Enter ID to Remove (0 to go back): ', 'ID')
+        id = take_input('Enter ID to Remove (0 to go back): ',
+                        'ID', min_value=0)
         if id == 0:
             print('\nCancelling Remove...\n')
             return
 
-    if id not in [pc['id'] for pc in data]:
+    pc = get_pcs(key='id', value=id)
+
+    if not pc:
         print(b.error(f'\nPC with ID {id} not found in DB\n'))
         id = -1
 
-    pc = [pc for pc in data if pc['id'] == id][0]
-    print_table([pc])
+    print_table(pc)
 
     confirm = input(
         b.warning(f'\nAre you sure you want to remove PC with ID {id}? (y/N): '))
@@ -243,99 +271,62 @@ def search_pc() -> None:
 
     res = []
 
-    print(b.underline('Search by:\n'))
-    print('1: ID')
-    print('2: Status')
-    print('3: OS\n')
-    print('0: Main menu')
+    print_menu(
+        menu_header='Search by:',
+        options=SEARCH_OPTIONS,
+        style=b.underline
+    )
 
-    text = ''
+    method = take_input('Enter search method: ', 'Choice',
+                        max_value=len(SEARCH_OPTIONS), min_value=0)
 
-    method = int(input('Enter search method: '))
-    if method == 1:
-        id = take_input('Enter ID to Search (0 to go back): ', 'ID')
-        if id == 0:
-            print('\nCancelling Search...\n')
-            return
-
-        pc = get_pc_by_id(id)
-
-        if pc:
-            res.append(pc)
-            text = f'\nPC with ID {id} found in DB'
-        else:
-            print(b.error(f'\nPC with ID {id} not found in DB'))
-            return
-
-    elif method == 2:
-        status = input(
-            'Enter Status to Search (0 to go back): ').lower()
-
-        if status == '0':
-            print('\nCancelling Search...\n')
-            return
-
-        for d in io.load():
-            if d['status'].lower() == status:
-                res.append(d)
-        text = b.success(
-            f'\nTotal of {len(res)} PC(s) found with status {status}')
-
-    elif method == 3:
-        os = input('Enter OS to Search (0 to go back): ').lower()
-        if os == '0':
-            print('\nCancelling Search...\n')
-            return
-
-        for d in io.load():
-            if d['os'].lower() == os:
-                res.append(d)
-        text = b.success(
-            f'\nTotal of {len(res)} PC(s) found with OS {os}')
-
-    elif method == 0:
+    if method == 4:
         return
 
-    else:
-        print_invalid_choice_msg()
+    category = SEARCH_OPTIONS[method - 1]
+
+    search_key = take_input(
+        f'Enter {category.upper()} to Search: ', exp_msg=category.upper(), isStr=True)
+
+    res = get_pcs(value=search_key, key=category.lower())
 
     if res:
-        print_table(data=res, showCountMsg=text)
+        text = b.success(
+            f'\nTotal of {len(res)} PC(s) found with {category.upper()} {search_key.upper()}')
+        print_table(data=res, countMsg=text)
     else:
-        print(b.error('\nNo match found in DB'))
+        text = b.error(
+            f'\nNo PC found with {category.upper()} {search_key.upper()}')
+        print(text)
 
 
 def show_all_pc() -> None:
     data = io.load()
     text = f"\nTotal {b.GREEN}{b.BOLD}{len(data)}{b.ENDC} PC(s) found in DB"
-    print_table(data=data, showCountMsg=text)
+    print_table(data=data, countMsg=text)
 
 
 def main_menu() -> None:
-    ctrls = ''.join([b.info(str(i + 1) + ': ') +
-                     ctrl + '\n' for i, ctrl in enumerate(CTRLS)])
 
     quitText = f"Type {b.info('quit')} to exit"
-    menu = b.title('Menu:') + '\n' + ctrls + '\n' + quitText
-
-    print('-' * 80)
 
     while True:
+        print_menu(menu_header='Main Menu:', style=b.title,
+                   options=CTRLS, menu_trailer=quitText)
         print()
-        print(menu)
-        choice = input('\nEnter your choice: ')
-        print('~' * 30 + '\n')
+        choice = take_input(msg='Enter your choice: ',
+                            exp_msg='Choice', max_value=len(CTRLS))
 
         match choice:
-            case '1':
+            case 1:
                 add_new_pc()
-            case '2':
+            case 2:
                 update_pc()
-            case '3':
+            case 3:
                 remove_pc()
-            case '4':
+            case 4:
                 show_all_pc()
-            case '5':
+            case 5:
                 search_pc()
             case 'quit':
                 break
@@ -346,7 +337,7 @@ def main_menu() -> None:
 def start_program() -> None:
     print_title()
     main_menu()
-    print('Quitting...')  # TODO: Save before quitting
+    print('Quitting CLMS...')  # TODO: Save before quitting
 
 
 if __name__ == '__main__':
