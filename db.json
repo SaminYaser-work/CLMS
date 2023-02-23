@@ -16,7 +16,7 @@
     },
     {
         "id": 4,
-        "status": "UNKNOWN",
+        "status": "INACTIVE",
         "os": "WINDOWS"
     }
 ]

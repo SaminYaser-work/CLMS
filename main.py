@@ -213,6 +213,33 @@ def add_new_pc() -> None:
     print(b.success(f'\nPC {id} added to DB'))
 
 
+def check_and_print(id=-1) -> int:
+    """Gets the PC with the given ID and prints it. If no ID is given, user will be asked to enter one. Used for Update and Remove functions.
+
+    Args:
+        id (int, optional): ID of the PC. Defaults to -1.
+
+    Returns:
+        bool: Returns True if the PC is found in the DB, else returns False
+    """
+    if id == -1:
+        id = take_input('Enter ID to Update (0 to go back): ',
+                        'ID', min_value=0)
+        if id == 0:
+            print('\nCancelling Update...\n')
+            return -1
+
+    pc = io.get(key='id', value=id)
+
+    if not pc:
+        print('\n' + b.error(f'ID {id} not found in DB'))
+        return -1
+
+    print_table(pc, showMsg=False)
+
+    return id
+
+
 def update_pc(showTitle: bool = True, id: int = -1) -> None:
     """Updates the PC with the given ID
 
@@ -225,29 +252,17 @@ def update_pc(showTitle: bool = True, id: int = -1) -> None:
         print(b.subtitle('\nUpdate PC\n'))
 
     if id == -1:
-        id = take_input('Enter ID to Update (0 to go back): ',
-                        'ID', min_value=0)
-        if id == 0:
-            print('\nCancelling Update...\n')
+        id = check_and_print(id)
+        if id == -1:
             return
 
-    pc = io.get(key='id', value=id)
-
-    if not pc:
-        print('\n' + b.error(f'ID {id} not found in DB'))
-        return
-
     os, status = get_os_and_status(id)
-
-    print(os, status)
 
     io.update(
         id=id,
         status=status,
         os=os
     )
-
-    print(b.success(f'\nPC {id} updated successfully'))
 
 
 def remove_pc(showTitle: bool = True, id: int = -1) -> None:
@@ -263,19 +278,9 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
         print(b.subtitle('\nRemove PC\n'))
 
     if id == -1:
-        id = take_input('Enter ID to Remove (0 to go back): ',
-                        'ID', min_value=0)
-        if id == 0:
-            print('\nCancelling Remove...\n')
+        id = check_and_print(id)
+        if id == -1:
             return
-
-    pc = io.get(key='id', value=id)
-
-    if not pc:
-        print(b.error(f'\nPC with ID {id} not found in DB\n'))
-        id = -1
-
-    print_table(pc)
 
     confirm = input(
         b.warning(f'\nAre you sure you want to remove PC with ID {id}? (y/N): '))
@@ -285,13 +290,11 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
 
     io.delete(id=id)
 
-    print(b.success(f'\nPC with ID {id} removed successfully from DB\n'))
-
 
 def search_pc() -> None:
     """ Searches the DB for a PC with the given ID, OS or Status. If no PC is found, an error message is displayed with a prompt to add a new PC.
     """
-    print(b.subtitle('\nSearch PC\n'))
+    print(b.subtitle('\nSearch PC'))
 
     res = []
 
