@@ -289,7 +289,7 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
 
 
 def search_pc() -> None:
-    """ Searches the DB for a PC with the given ID, OS or Status
+    """ Searches the DB for a PC with the given ID, OS or Status. If no PC is found, an error message is displayed with a prompt to add a new PC.
     """
     print(b.subtitle('\nSearch PC\n'))
 
@@ -322,6 +322,13 @@ def search_pc() -> None:
         text = b.error(
             f'\nNo PC found with {category.upper()} {search_key.upper()}')
         print(text)
+
+        # Add new PC
+        confirm = input(
+            b.warning(f'\nDo you want to add a new PC with {category.upper()} {search_key.upper()}? (y/N): '))
+        if confirm != 'y':
+            return
+        add_new_pc()
 
 
 def show_all_pc() -> None:
