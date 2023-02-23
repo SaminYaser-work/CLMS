@@ -13,6 +13,9 @@ b = bc()
 
 
 def print_title() -> None:
+    """Prints the title of the program
+    """
+
     title = '''
                                            .         .
     ,o888888o.    8 8888                  ,8.       ,8.            d888888o.
@@ -32,48 +35,39 @@ def print_title() -> None:
                            )))
     print(b.success('-' * 78))
 
-# TODO: Add docstrings to all functions
-# TODO: Every function should have a return type
-# TODO: Every function's parameter should have a type
-# TODO: Use Match instead of if-else
-
-
-def is_id_unique(id: int) -> bool:
-    data = io.load()
-    if id in [pc['id'] for pc in data]:
-        return False
-    return True
-
-
-def get_pcs(value: str | int, key='id' or 'status' or 'os') -> list:
-    res = []
-    for pc in io.load():
-        if str(pc[key]) == str(value):
-            res.append(pc)
-    return res
-
-
-def is_valid_id(id: int) -> bool:
-    return id > 0
-
-
-def get_pc_by_id(id: int) -> dict:
-    data = io.load()
-    for pc in data:
-        if pc['id'] == id:
-            return pc
-    return {}
+# DONE: Add docstrings to all functions
+# DONE: Every function should have a return type
+# DONE: Every function's parameter should have a type
 
 
 def print_exception_msg(msg: str) -> None:
+    """Prints an error with the given message
+
+    Args:
+        msg (str): Message to be printed
+    """
     print(f'\n{b.error("Error")} {msg} must be a non-zero positive integer\n')
 
 
 def print_invalid_choice_msg() -> None:
+    """Prints an error when the user enters an invalid choice in menu
+    """
     print(f'\n{b.warning("Invalid choice")}\n')
 
 
 def take_input(msg: str, exp_msg: str, max_value=sys.maxsize, min_value=1,  isStr=False) -> int | str:
+    """Takes input from the user, validates it while handling exceptions, and returns it
+
+    Args:
+        msg (str): Input prompt message
+        exp_msg (str): Message to be printed when an exception occurs
+        max_value (_type_, optional): Max value for menu selection. Defaults to sys.maxsize.
+        min_value (int, optional): Min value for menu selection. Defaults to 1.
+        isStr (bool, optional): Take the input as a string. Defaults to False.
+
+    Returns:
+        int | str: Returns the input if it is a string or an integer between min_value and max_value
+    """
     while True:
         inp = input(msg).strip().lower()
         if isStr or inp == 'quit':
@@ -92,6 +86,13 @@ def take_input(msg: str, exp_msg: str, max_value=sys.maxsize, min_value=1,  isSt
 
 
 def print_table(data: list, countMsg='', showMsg=True) -> None:
+    """Prints the given data in a table with proper formatting
+
+    Args:
+        data (list): List of dictionaries to be printed
+        countMsg (str, optional): Custom message to be shown instead of the default one at the beginning of the table. Defaults to ''.
+        showMsg (bool, optional): Show or hide message at the beginning. Defaults to True.
+    """
 
     if showMsg:
         if not countMsg:
@@ -121,6 +122,14 @@ def print_table(data: list, countMsg='', showMsg=True) -> None:
 
 
 def print_menu(menu_header: str, options: list, menu_trailer='', style=b.warning) -> None:
+    """Prints a menu with the given options
+
+    Args:
+        menu_header (str): The header of the menu
+        options (list): List of options to be printed
+        menu_trailer (str, optional): The trailer of the menu. Defaults to ''.
+        style (_type_, optional): Style of the menu_header. Defaults to b.warning.
+    """
 
     print(style(f'\n{menu_header}'))
 
@@ -136,6 +145,14 @@ def print_menu(menu_header: str, options: list, menu_trailer='', style=b.warning
 
 
 def get_os_and_status(id: int):
+    """Takes input from the user for the OS and status of the PC with the given ID. Used for Add and Update functions
+
+    Args:
+        id (int): ID of the PC
+
+    Returns:
+        _type_: Returns the OS and status of the PC
+    """
     print_menu(
         f'What is the Operating System of the PC {id}?', OS
     )
@@ -153,11 +170,13 @@ def get_os_and_status(id: int):
 
 
 def add_new_pc() -> None:
+    """Adds a new PC to the DB
+    """
     print(b.subtitle('\nADD PC\n'))
 
     id = take_input('Enter ID: ', 'ID')
 
-    pc = get_pcs(key='id', value=id)
+    pc = io.get(key='id', value=id)
 
     if pc:
         print(b.info(f'\nID {id} already exists in DB'))
@@ -185,18 +204,22 @@ def add_new_pc() -> None:
 
     os, status = get_os_and_status(id)
 
-    data = io.load()
-    data.append({
-        "id": id,
-        "status": status,
-        "os": os
-    })
-    io.save(data)
+    io.create(
+        id=id,
+        status=status,
+        os=os
+    )
 
     print(b.success(f'\nPC {id} added to DB'))
 
 
 def update_pc(showTitle: bool = True, id: int = -1) -> None:
+    """Updates the PC with the given ID
+
+    Args:
+        showTitle (bool, optional): Show title. Defaults to True.
+        id (int, optional): ID of the PC to update. If not given, user will be prompted to input a valid ID. Defaults to -1.
+    """
 
     if showTitle:
         print(b.subtitle('\nUpdate PC\n'))
@@ -208,7 +231,7 @@ def update_pc(showTitle: bool = True, id: int = -1) -> None:
             print('\nCancelling Update...\n')
             return
 
-    pc = get_pcs(key='id', value=id)
+    pc = io.get(key='id', value=id)
 
     if not pc:
         print('\n' + b.error(f'ID {id} not found in DB'))
@@ -218,24 +241,26 @@ def update_pc(showTitle: bool = True, id: int = -1) -> None:
 
     print(os, status)
 
-    data = io.load()
-    # TODO: Create update function
-    for pc in data:
-        if pc['id'] == id:
-            pc['status'] = status
-            pc['os'] = os
-            break
-    io.save(data)
+    io.update(
+        id=id,
+        status=status,
+        os=os
+    )
 
     print(b.success(f'\nPC {id} updated successfully'))
 
 
 def remove_pc(showTitle: bool = True, id: int = -1) -> None:
+    """Removes the PC with the given ID
+
+
+    Args:
+        showTitle (bool, optional): Show title. Defaults to True.
+        id (int, optional): ID of the PC to remove. If not given, user will be prompted to provide a valid ID. Defaults to -1.
+    """
 
     if showTitle:
         print(b.subtitle('\nRemove PC\n'))
-
-    data = io.load()
 
     if id == -1:
         id = take_input('Enter ID to Remove (0 to go back): ',
@@ -244,7 +269,7 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
             print('\nCancelling Remove...\n')
             return
 
-    pc = get_pcs(key='id', value=id)
+    pc = io.get(key='id', value=id)
 
     if not pc:
         print(b.error(f'\nPC with ID {id} not found in DB\n'))
@@ -258,16 +283,14 @@ def remove_pc(showTitle: bool = True, id: int = -1) -> None:
         print('\nCancelling Remove...\n')
         return
 
-    for pc in data:
-        if pc['id'] == id:
-            data.remove(pc)
-            io.save(data)
-            break
+    io.delete(id=id)
 
     print(b.success(f'\nPC with ID {id} removed successfully from DB\n'))
 
 
 def search_pc() -> None:
+    """ Searches the DB for a PC with the given ID, OS or Status
+    """
     print(b.subtitle('\nSearch PC\n'))
 
     res = []
@@ -289,7 +312,7 @@ def search_pc() -> None:
     search_key = take_input(
         f'Enter {category.upper()} to Search: ', exp_msg=category.upper(), isStr=True)
 
-    res = get_pcs(value=search_key.upper(), key=category.lower())
+    res = io.get(value=search_key.upper(), key=category.lower())
 
     if res:
         text = b.success(
@@ -302,12 +325,19 @@ def search_pc() -> None:
 
 
 def show_all_pc() -> None:
-    data = io.load()
+    """Shows all the PC in the DB in a table
+    """
+    data = io.get_all()
+    if not data:
+        print(b.error('\nNo PC found in DB'))
+        return
     text = f"\nTotal {b.GREEN}{b.BOLD}{len(data)}{b.ENDC} PC(s) found in DB"
     print_table(data=data, countMsg=text)
 
 
 def main_menu() -> None:
+    """Main menu of the program
+    """
 
     quitText = f"Type {b.info('quit')} to exit"
 
@@ -336,6 +366,8 @@ def main_menu() -> None:
 
 
 def start_program() -> None:
+    """Starts the program
+    """
     print_title()
     main_menu()
     print(b.subtitle('\nQuitting CLMS...'))
